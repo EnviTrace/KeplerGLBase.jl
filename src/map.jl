@@ -26,7 +26,7 @@ end
         height::Int64 = 900,
         center_map = true,
         read_only = false,
-        config = KeplerGL.make_static_config())
+        config = KeplerGLBase.make_static_config())
 
 Creates a new `KeplerGLMap`.
 
@@ -38,20 +38,20 @@ Creates a new `KeplerGLMap`.
 - `height:Int64 = 900`: height of the map window
 - `center_map - true`: whether the map should automatically be centered
 - `read_only = false`: whether the map should be read-only (not editable)
-- `config = KeplerGL.make_static_config()`: initial configuration
+- `config = KeplerGLBase.make_static_config()`: initial configuration
 """
 function KeplerGLMap(token::String;
     width::Int64 = 1200,
     height::Int64 = 900,
     center_map = true,
     read_only = false,
-    config = KeplerGL.make_static_config())
+    config = KeplerGLBase.make_static_config())
 
-    info = Dict(:app => "KeplerGL.jl", 
+    info = Dict(:app => "KeplerGLBase.jl", 
         :description => "", 
         :created_at  => Dates.format(Dates.now(),"e u d yyyy HH:MM:SS", locale="english"),
         :title => "keplergl_$(randstring(6))",
-        :source => "KeplerGL.jl")
+        :source => "KeplerGLBase.jl")
 
     window = Dict(:token => token,
         :width => width,
@@ -104,7 +104,7 @@ function load_map_from_json!(m::KeplerGLMap, json_map_file::String)
 
         # add the datasets as FieldsRowsData
         for d in mapjson[:datasets]
-            dat = KeplerGL.FieldsRowsData(d[:data][:id], JSON3.write(d))
+            dat = KeplerGLBase.FieldsRowsData(d[:data][:id], JSON3.write(d))
             push!(m.datasets, dat)
         end
     catch ex
@@ -337,45 +337,6 @@ function make_html(m::KeplerGLMap, dispatch_code::String)
             }(KeplerGl, store))
         </script>
     """
-
-end
-
-
-"""
-    render(map::KeplerGLMap)
-
-Renders a `KeplerGLMap` in a new `Blink.jl` window and returns this window.
-
-# Required Arguments
-- `m::KeplerGLMap`: the map that should be rendered
-"""
-function render(map::KeplerGLMap)
-
-    dispatch_code = make_dispatch_code(map)
-    map_html = make_html(map, dispatch_code)
-
-    blink_options = Dict("width" => map.window[:width], "height" => map.window[:height], "title" => "KeplerGL.jl", 
-        "useContentSize" => true # whether the width/height will we use as the canvas size (instead of win size)
-    )
-
-    w = Window(blink_options, async=false)
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "react.production.min.js"))
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "react-dom.production.min.js"))
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "redux.js"))
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "react-redux.min.js"))
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "styled-components.min.js"))
-    load!(w, joinpath(dirname(@__FILE__), "..", "assets", "js", "keplergl.min.js"))
-
-    # load!(w, "assets/js/react.production.min.js")
-    # load!(w, "assets/js/react-dom.production.min.js")
-    # load!(w, "assets/js/redux.js")
-    # load!(w, "assets/js/react-redux.min.js")
-    # load!(w, "assets/js/styled-components.min.js")
-    # load!(w, "assets/js/keplergl.min.js")
-
-    body!(w, map_html, async=false);
-
-    return w
 
 end
 
