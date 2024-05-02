@@ -2,9 +2,9 @@
 
 # Kepler.gl with local js files 
 
-using KeplerGL
+using KeplerGLBase
 
-using Blink, GeoJSON
+using GeoJSON
 using DataFrames, CSV, Colors, ColorBrewer
 using Random
 using Test
@@ -33,7 +33,7 @@ function comparewithfile(s::String, file::String)
         return false
         println("Reference output:")
         @show s1
-        println("KeplerGL.jl output:")
+        println("KeplerGLBase.jl output:")
         @show s
     end
 end
@@ -41,9 +41,9 @@ end
 token = "mytoken"
 
 # load an existing kepler.gl map (in json form) and show it
-m = KeplerGL.KeplerGLMap(token)
-KeplerGL.load_map_from_json!(m, "../assets/example_data/earthquakes.kepler.gl.json");
-s = KeplerGL.get_html(m)
+m = KeplerGLBase.KeplerGLMap(token)
+KeplerGLBase.load_map_from_json!(m, "../assets/example_data/earthquakes.kepler.gl.json");
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map1.html", "w")
@@ -51,17 +51,17 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map1.html")
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
 
 
 # 2.) point layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 # df = DataFrame(:lat => rand(Float64, 10), :lon => rand(Float64, 10))
 latitude = :Latitude
 longitude = :Longitude
-KeplerGL.add_point_layer!(m, df, latitude, longitude, id = "abc");
-s = KeplerGL.get_html(m)
+KeplerGLBase.add_point_layer!(m, df, latitude, longitude, id = "abc");
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map2.html", "w")
@@ -72,11 +72,11 @@ end
 
 
 # 2.b with more attributes
-m = KeplerGL.KeplerGLMap(token, center_map=false)
+m = KeplerGLBase.KeplerGLMap(token, center_map=false)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 latitude = :Latitude
 longitude = :Longitude
-KeplerGL.add_point_layer!(m, df, latitude, longitude,
+KeplerGLBase.add_point_layer!(m, df, latitude, longitude,
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", id = "abc", 
     color_range = ColorBrewer.palette("PRGn", 6),
     radius_field = :Magnitude, radius_scale = "sqrt", radius_range = [4.2, 96.2], radius_fixed = false,
@@ -88,7 +88,7 @@ m.window[:map_legend_show] = false
 m.window[:map_legend_active] = false
 m.window[:visible_layers_show] = false
 m.window[:visible_layers_active] = false
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map2b.html", "w")
@@ -98,28 +98,28 @@ end
 @test comparewithfile(s, "../test/comparison/map2b.html")
 
 # # Testing the exporting requires a mapbox token... don't do this at this point
-# win = KeplerGL.render(m);
+# win = KeplerGLBase.render(m);
 # # Exporting an image
-# KeplerGL.export_image(win, "test/earthquakes.png")
+# KeplerGLBase.export_image(win, "test/earthquakes.png")
 
 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 latitude = :Latitude
 longitude = :Longitude
-KeplerGL.add_point_layer!(m, df, latitude, longitude,  id = "abc", 
+KeplerGLBase.add_point_layer!(m, df, latitude, longitude,  id = "abc", 
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", 
     radius_field = :Magnitude,
     radius_scale = "sqrt", radius_range = [4.2, 96.2], radius_fixed = false,
     filled = true, opacity = 0.39, 
     outline = true, outline_color = colorant"rgb(255,0,0)", outline_thickness = 2.0);
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 latitude = :Latitude
 longitude = :Longitude
-KeplerGL.add_point_layer!(m, df, latitude, longitude,
+KeplerGLBase.add_point_layer!(m, df, latitude, longitude,
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize",   id = "abc", 
     radius_field = :Magnitude,
     radius_scale = "sqrt", radius_range = [4.2, 96.2], radius_fixed = false,
@@ -127,30 +127,30 @@ KeplerGL.add_point_layer!(m, df, latitude, longitude,
     outline = true, outline_color = colorant"rgb(255,0,0)", outline_thickness = 2.0,
     outline_color_field = :Magnitude,
     outline_color_range = ColorBrewer.palette("Greens", 5), outline_color_scale = "quantile");
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
 
 
 # 3.) Multiple point layers:
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 df2 = copy(df)
 rng = MersenneTwister(12345)
 df2.Latitude = df2.Latitude .+ (rand(rng, Float64, length(df2.Latitude)) .- 0.5)
 df2.Longitude = df2.Longitude .+ 10.0 .* (rand(rng, Float64, length(df2.Longitude)) .- 0.5) 
-KeplerGL.add_point_layer!(m, df, :Latitude, :Longitude,  id = "abc", 
+KeplerGLBase.add_point_layer!(m, df, :Latitude, :Longitude,  id = "abc", 
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", 
     radius_field = :Magnitude,
     radius_scale = "sqrt", radius_range = [4.2, 96.2], radius_fixed = false,
     filled = true, opacity = 0.39, 
     outline = false);
-KeplerGL.add_point_layer!(m, df2, :Latitude, :Longitude,  id = "def", 
+KeplerGLBase.add_point_layer!(m, df2, :Latitude, :Longitude,  id = "def", 
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", 
     color_range = ColorBrewer.palette("BrBG", 10),
     radius_field = :Magnitude,
     radius_scale = "sqrt", radius_range = [4.2, 96.2], radius_fixed = false,
     filled = true, opacity = 0.39, 
     outline = false);
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map3.html", "w")
@@ -158,14 +158,14 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map3.html")
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # 4.) Polygon layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/counties-unemployment.csv", DataFrame)
-KeplerGL.add_polygon_layer!(m, df, :_geojson , id = "abc", 
+KeplerGLBase.add_polygon_layer!(m, df, :_geojson , id = "abc", 
     color = colorant"red", color_field = :unemployment_rate, color_range = ColorBrewer.palette("RdPu", 9))
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map4.html", "w")
@@ -173,18 +173,18 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map4.html")    
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # more options:
-m = KeplerGL.KeplerGLMap(token, center_map=false, read_only=true)
+m = KeplerGLBase.KeplerGLMap(token, center_map=false, read_only=true)
 df = CSV.read("../assets/example_data/counties-unemployment.csv", DataFrame)
 m.config[:config][:mapState][:latitude] = 50.599316787924764
 m.config[:config][:mapState][:longitude] = -115.66724821496788
 m.config[:config][:mapState][:zoom] = 2.7356799639938085
-KeplerGL.add_polygon_layer!(m, df, :_geojson , id = "abc", 
+KeplerGLBase.add_polygon_layer!(m, df, :_geojson , id = "abc", 
     color = colorant"red", color_field = :unemployment_rate, color_range = ColorBrewer.palette("RdPu", 9),
     color_scale = "quantile", opacity = 0.8)
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map4b.html", "w")
@@ -192,15 +192,15 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map4b.html")   
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # 5.) Hexagon layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
-KeplerGL.add_hexagon_layer!(m, df, :Latitude, :Longitude,  id = "abc", opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
+KeplerGLBase.add_hexagon_layer!(m, df, :Latitude, :Longitude,  id = "abc", opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
     radius = 20.0, color_range = ColorBrewer.palette("BuPu",6), color_aggregation = "average", coverage = 0.95,
     height_field = :Magnitude )
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map5.html", "w")
@@ -208,30 +208,30 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map5.html")   
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # in 3d:
-m = KeplerGL.KeplerGLMap(token, center_map=false)
+m = KeplerGLBase.KeplerGLMap(token, center_map=false)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
-KeplerGL.add_hexagon_layer!(m, df, :Latitude, :Longitude,  id = "abc",  opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
+KeplerGLBase.add_hexagon_layer!(m, df, :Latitude, :Longitude,  id = "abc",  opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
     radius = 20.0, color_range = ColorBrewer.palette("BuPu",6), color_aggregation = "average", coverage = 0.95,
     height_field = :Magnitude, elevation_scale=68.2, height_aggregation = "sum", enable_3d = true  )
 m.config[:config][:mapState][:latitude] = 37.47
 m.config[:config][:mapState][:longitude] = -121.947
 m.config[:config][:mapState][:pitch] = 24.858
 m.config[:config][:mapState][:zoom] = 4.892
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 
 # 6.) Line layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 df.Latitude1 = df.Latitude .+ (rand(rng, Float64, length(df.Latitude)) .- 0.5)
 df.Longitude1 = df.Longitude .+ 10.0 .* (rand(rng, Float64, length(df.Longitude)) .- 0.5) 
-KeplerGL.add_line_layer!(m, df, :Latitude, :Longitude, :Latitude1, :Longitude1, id = "abc", 
+KeplerGLBase.add_line_layer!(m, df, :Latitude, :Longitude, :Latitude1, :Longitude1, id = "abc", 
     opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
     color_range = ColorBrewer.palette("BuPu",6), thickness = 3)
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map6.html", "w")
@@ -239,19 +239,19 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map6.html")   
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 
 # 7.) Arc layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 m.window[:toggle_3d_show] = true
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 df.Latitude1 = df.Latitude .+ (rand(rng, Float64, length(df.Latitude)) .- 0.5)
 df.Longitude1 = df.Longitude .+ 10.0 .* (rand(rng, Float64, length(df.Longitude)) .- 0.5) 
-KeplerGL.add_arc_layer!(m, df, :Latitude, :Longitude, :Latitude1, :Longitude1,  id = "abc", 
+KeplerGLBase.add_arc_layer!(m, df, :Latitude, :Longitude, :Latitude1, :Longitude1,  id = "abc", 
     opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
     color_range = ColorBrewer.palette("BuPu",6), thickness = 3)
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map7.html", "w")
@@ -259,16 +259,16 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map7.html")
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 
 # 8.) Grid layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
-KeplerGL.add_grid_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, color_field = :Magnitude, color_scale = "quantile", id = "abc", 
+KeplerGLBase.add_grid_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, color_field = :Magnitude, color_scale = "quantile", id = "abc", 
     radius = 20.0, color_range = ColorBrewer.palette("BuPu",6), color_aggregation = "average", coverage = 0.95,
     height_field = :Magnitude )
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map8.html", "w")
@@ -276,14 +276,14 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map8.html")
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # 9.) Heatmap layer
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
-KeplerGL.add_heatmap_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, weight_field = :Magnitude, weight_scale = "linear", id = "abc", 
+KeplerGLBase.add_heatmap_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, weight_field = :Magnitude, weight_scale = "linear", id = "abc", 
     radius = 20.0, color_range = ColorBrewer.palette("BuPu",6) )
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map9.html", "w")
@@ -291,14 +291,14 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map9.html")
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # 10.) Cluster layer
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
-KeplerGL.add_cluster_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, color_field = :Magnitude, color_scale = "quantile", id = "abc", 
+KeplerGLBase.add_cluster_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, color_field = :Magnitude, color_scale = "quantile", id = "abc", 
     radius_range = [1,40], cluster_radius = 20, color_range = ColorBrewer.palette("BuPu",6), color_aggregation = "count" )
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map10.html", "w")
@@ -306,14 +306,14 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map10.html")
-# win = KeplerGL.render(m)
+# win = KeplerGLBase.render(m)
 
 # 11.) Icon layer 
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 df.icon = rand(rng, ["circle", "plus", "delete"], length(df.Latitude))
-KeplerGL.add_icon_layer!(m, df, :Latitude, :Longitude, :icon, color = colorant"black", id = "abc" );
-s = KeplerGL.get_html(m)
+KeplerGLBase.add_icon_layer!(m, df, :Latitude, :Longitude, :icon, color = colorant"black", id = "abc" );
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map11.html", "w")
@@ -321,19 +321,19 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map11.html")
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
 
 # 12.) H3 layer
 using H3, H3.API
-m = KeplerGL.KeplerGLMap(token)
+m = KeplerGLBase.KeplerGLMap(token)
 df = CSV.read("../assets/example_data/data.csv", DataFrame)
 coord = H3.Lib.GeoCoord.(deg2rad.(df.Latitude), deg2rad.(df.Longitude) )
 h3 = H3.API.geoToH3.(coord, 5)
 df.h3str = H3.API.h3ToString.(h3)
-KeplerGL.add_h3_layer!(m, df, :h3str, id = "abc",
+KeplerGLBase.add_h3_layer!(m, df, :h3str, id = "abc",
     color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", 
     color_range = ColorBrewer.palette("PRGn", 6));
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map12.html", "w")
@@ -341,17 +341,17 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map12.html")
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
 
 # 13.) Trip layer
 using JSON3
 t = JSON3.read("../assets/example_data/trip_example.geojson")
 df = DataFrame(:geometry => string.(t[:features]))
-m = KeplerGL.KeplerGLMap(token)
-KeplerGL.add_trip_layer!(m, df, :geometry ,
+m = KeplerGLBase.KeplerGLMap(token)
+KeplerGLBase.add_trip_layer!(m, df, :geometry ,
     id = "abc",
     color = colorant"red")
-s = KeplerGL.get_html(m)
+s = KeplerGLBase.get_html(m)
 # # use this to write the string s to a reference file
 if write_to_disk
     f = open("../test/comparison/map13.html", "w")
@@ -359,4 +359,4 @@ if write_to_disk
     close(f)
 end
 @test comparewithfile(s, "../test/comparison/map13.html")
-# KeplerGL.render(m)
+# KeplerGLBase.render(m)
