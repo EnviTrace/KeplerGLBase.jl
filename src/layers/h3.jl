@@ -22,7 +22,7 @@
 Adds a H3 layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `h3::Symbol`: name of the column of `table` that contains the H3 index
 
 # Optional Arguments
@@ -35,14 +35,14 @@ Adds a H3 layer to the map `m`, drawing data from `table`.
 - `coverage = 0.95`: fraction of the hexagon area that should be covered
 - `opacity = 1.0`: opacity of the hexagons, between `0.0` and `1.0`
 - `height_field::Symbol = :null`: name of the column of `table` that should be used to determine the height of the hexagons
-- `height_scale = "sqrt"`: how `height_field` should be converted into the actual height 
+- `height_scale = "sqrt"`: how `height_field` should be converted into the actual height
 - `height_range = [0,500]`: range of the height of columns
 - `coverage_field = :null`: name of the column of `table` that should be used to determine the coverage of hexagons
 - `coverage_scale = "linear"`: how `coverage_field` should be converted into the actual coverage
 - `coverage_range = [0,1]`: range of the coverage
 - `elevation_scale = 5`: scaling factor for the height
 - `enable_elevation_zoom_factor = true`
-- `enable_3d = false`: nable 3d on the layer  
+- `enable_3d = false`: nable 3d on the layer
 
 # Examples
 ```julia
@@ -53,12 +53,13 @@ coord = H3.Lib.GeoCoord.(deg2rad.(df.Latitude), deg2rad.(df.Longitude) )
 h3 = H3.API.geoToH3.(coord, 5)
 df.h3str = H3.API.h3ToString.(h3)
 KeplerGL.add_h3_layer!(m, df, :h3str,
-    color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize", 
+    color = colorant"rgb(23,184,190)", color_field = :Magnitude, color_scale = "quantize",
     color_range = ColorBrewer.palette("PRGn", 6));
 ```
 """
 function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_field::Symbol = :null,
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
@@ -81,16 +82,16 @@ function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
         error("Second argument to add_hexagon_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:h3 => Tables.getcolumn(cols, h3))
-    if color_field != :null 
+    if color_field != :null
         df_to_use[!,:Color] = Tables.getcolumn(cols, color_field)
     end
-    if height_field != :null 
+    if height_field != :null
         df_to_use[!,:Height] = Tables.getcolumn(cols, height_field)
     end
-    if coverage_field != :null 
+    if coverage_field != :null
         df_to_use[!,:Coverage] = Tables.getcolumn(cols, coverage_field)
     end
 
@@ -99,8 +100,7 @@ function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
     CSV.write(buf, df_to_use)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -114,7 +114,7 @@ function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
     col = get_rgb_int(color)
     highlight_col = get_rgb_int(highlight_color)
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -151,7 +151,7 @@ function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
                     $(coverage_range[2])
                 ],
                 "elevationScale": $(elevation_scale),
-                "enableElevationZoomFactor": $(enable_elevation_zoom_factor)                
+                "enableElevationZoomFactor": $(enable_elevation_zoom_factor)
             },
             "hidden": false,
             "textLabel": [
@@ -206,7 +206,7 @@ function add_h3_layer!(m::KeplerGLMap, table, h3::Symbol;
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 

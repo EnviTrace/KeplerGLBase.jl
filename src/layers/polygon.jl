@@ -20,12 +20,12 @@
         height_scale = "linear",
         elevation_scale = 1.0,
         enable_elevation_zoom_factor = true,
-        enable_3d = false)  
+        enable_3d = false)
 
 Adds a polygon layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `geojson::Symbo`: name of the column of `table` that contains the feature in GeoJSON format
 
 # Optional Arguments
@@ -46,10 +46,10 @@ Adds a polygon layer to the map `m`, drawing data from `table`.
 - `outline_width_field::Symbol = :null`: name of the column of `table` that should be used to determine the width of the polygon outline
 - `outline_width_scale = "linear"`: how the values in `outline_width_field` should be converted into the with of the outline
 - `height_field::Symbol = :null`: name of the column of `table` that should be used to determine the height of the feature
-- `height_scale = "linear"`: how `height_field` should be converted into the actual height 
+- `height_scale = "linear"`: how `height_field` should be converted into the actual height
 - `elevation_scale = 1.0`: scaling factor for the height
 - `enable_elevation_zoom_factor = true`
-- `enable_3d = false`: enable 3d on the layer  
+- `enable_3d = false`: enable 3d on the layer
 
 # Examples
 ```julia
@@ -63,6 +63,7 @@ KeplerGL.add_polygon_layer!(m, df, :_geojson ,
 function add_polygon_layer!(
     m::KeplerGLMap, table, geojson::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_field::Symbol = :null,
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
@@ -90,31 +91,30 @@ function add_polygon_layer!(
         error("Second argument to add_polygon_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:geojson => Tables.getcolumn(cols, geojson))
-    if color_field != :null 
+    if color_field != :null
         df_to_use[!,:Color] = Tables.getcolumn(cols, color_field)
     end
-    if outline_color_field != :null 
+    if outline_color_field != :null
         df_to_use[!,:OutlineColor] = Tables.getcolumn(cols, outline_color_field)
     end
-    if outline_width_field != :null 
+    if outline_width_field != :null
         df_to_use[!,:OutlineWidth] = Tables.getcolumn(cols, outline_width_field)
     end
-    if height_field != :null 
+    if height_field != :null
         df_to_use[!,:Height] = Tables.getcolumn(cols, height_field)
     end
 
-    # i'm choosing a buffer size based on the size of the :geojson column, plus a bit 
+    # i'm choosing a buffer size based on the size of the :geojson column, plus a bit
     # if this is still too low, it will error...
     bufsize_exp = Int(maximum(floor.(log2.(sizeof.(df_to_use[!,:geojson]))))) + 6
     buf = IOBuffer()
     CSV.write(buf, df_to_use, bufsize=2^bufsize_exp)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -136,7 +136,7 @@ function add_polygon_layer!(
     highlight_col = get_rgb_int(highlight_color)
     outline_col = get_rgb_int(outline_color)
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -234,7 +234,7 @@ function add_polygon_layer!(
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 

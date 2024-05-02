@@ -17,7 +17,7 @@
 Adds a polygon layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `geojson::Symbol`: name of the column of `table` that contains the trip in GeoJSON format (as `LineString`, see [here](https://docs.kepler.gl/docs/user-guides/c-types-of-layers/k-trip))
 
 # Optional Arguments
@@ -35,7 +35,7 @@ Adds a polygon layer to the map `m`, drawing data from `table`.
 
 !!! note
 
-    The trip layer is showing a dynamic visualization of the trips, so exporting the map as 
+    The trip layer is showing a dynamic visualization of the trips, so exporting the map as
     a static image is not very meaningful.
 
 # Examples
@@ -52,6 +52,7 @@ KeplerGL.render(m)
 function add_trip_layer!(
     m::KeplerGLMap, table, geojson::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_field::Symbol = :null,
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
@@ -62,32 +63,31 @@ function add_trip_layer!(
     outline_thickness = 2.0,
     outline_width_field::Symbol = :null,
     outline_width_scale = "linear",
-    outline_width_range = [0,10]  
+    outline_width_range = [0,10]
 )
 
     if !Tables.istable(table)
         error("Second argument to add_polygon_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:geojson => Tables.getcolumn(cols, geojson))
-    if color_field != :null 
+    if color_field != :null
         df_to_use[!,:Color] = Tables.getcolumn(cols, color_field)
     end
-    if outline_width_field != :null 
+    if outline_width_field != :null
         df_to_use[!,:OutlineWidth] = Tables.getcolumn(cols, outline_width_field)
     end
 
-    # i'm choosing a buffer size based on the size of the :geojson column, plus a bit 
+    # i'm choosing a buffer size based on the size of the :geojson column, plus a bit
     # if this is still too low, it will error...
     bufsize_exp = Int(maximum(floor.(log2.(sizeof.(df_to_use[!,:geojson]))))) + 6
     buf = IOBuffer()
     CSV.write(buf, df_to_use, bufsize=2^bufsize_exp)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -101,7 +101,7 @@ function add_trip_layer!(
     col = get_rgb_int(color)
     highlight_col = get_rgb_int(highlight_color)
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -168,7 +168,7 @@ function add_trip_layer!(
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 
