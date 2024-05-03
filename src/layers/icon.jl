@@ -10,12 +10,12 @@
         radius_fixed = true,
         radius_field::Symbol = :null,
         radius_range = [5.0, 15.0],
-        radius_scale = "sqrt",    
-        opacity = 1.0)  
+        radius_scale = "sqrt",
+        opacity = 1.0)
 Adds an icon layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `latitude::Symbol`: name of the column of `table` that contains the latitude of the points
 - `longitude::Symbol`: name of the column of `table` that contains the longitude of the points
 - `icon::Symbol`: name of the column of `table` that contains the strings with symbol names. See below for the list of valid symbol names.
@@ -29,10 +29,10 @@ Adds an icon layer to the map `m`, drawing data from `table`.
 - `highlight_color = colorant"#762A83"`: highlight color.
 - `altitude::Symbol = :null`: the name of the column of `table` that should be used for the altitude of the points
 - `radius = 10.0`: fixed radius value of the points on the map
-- `radius_fixed = true`: whether the radius should be fixed or depend on `radius_field` 
+- `radius_fixed = true`: whether the radius should be fixed or depend on `radius_field`
 - `radius_field::Symbol = :null`: the name of the column of `table` that should be used for the radius of the points
 - `radius_range = [5.0, 15.0]`: range of the radii of the points
-- `radius_scale = "sqrt"`: how to map `radius_field` into the radius    
+- `radius_scale = "sqrt"`: how to map `radius_field` into the radius
 - `opacity = 1.0`: opacity of the points, between `0.0` and `1.0`
 
 # Examples
@@ -47,6 +47,7 @@ KeplerGL.add_icon_layer!(m, df, :Latitude, :Longitude, :icon; color = colorant"b
 """
 function add_icon_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Symbol, icon::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_field::Symbol = :null,
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
@@ -56,24 +57,24 @@ function add_icon_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Sym
     radius = 10.0,
     radius_field::Symbol = :null,
     radius_range = [5.0, 15.0],
-    radius_scale = "sqrt",    
+    radius_scale = "sqrt",
     opacity = 1.0)
 
     if !Tables.istable(table)
         error("Second argument to add_point_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:Latitude => Tables.getcolumn(cols, latitude),
         :Longitude => Tables.getcolumn(cols, longitude), :icon => Tables.getcolumn(cols, icon))
-    if radius_field != :null 
+    if radius_field != :null
         df_to_use[!,:Size] = Tables.getcolumn(cols, radius_field)
     end
-    if color_field != :null 
+    if color_field != :null
         df_to_use[!,:Color] = Tables.getcolumn(cols, color_field)
     end
-    if altitude != :null 
+    if altitude != :null
         df_to_use[!,:Altitude] = Tables.getcolumn(cols, altitude)
     end
 
@@ -81,8 +82,7 @@ function add_icon_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Sym
     CSV.write(buf, df_to_use)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -98,7 +98,7 @@ function add_icon_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Sym
 
     # note that fixedRadius has to be false, otherwise it doesn't render!
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -168,7 +168,7 @@ function add_icon_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Sym
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 

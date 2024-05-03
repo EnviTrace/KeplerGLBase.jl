@@ -1,5 +1,5 @@
 """
-    add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Symbol, 
+    add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Symbol,
         latitude1::Symbol, longitude1::Symbol;
         color = colorant"#762A83",
         color_field::Symbol = :null,
@@ -18,7 +18,7 @@
 Adds an arc layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `latitude0::Symbol`: name of the column of `table` that contains the latitude of the origin of the line
 - `longitude0::Symbol`: name of the column of `table` that contains the longitude of the origin of the line
 - `latitude1::Symbol`: name of the column of `table` that contains the latitude of the endpoint of the line
@@ -46,15 +46,16 @@ Adds an arc layer to the map `m`, drawing data from `table`.
 m = KeplerGL.KeplerGLMap(token, center_map=false)
 df = CSV.read("assets/example_data/data.csv", DataFrame)
 df.Latitude1 = df.Latitude .+ (rand(rng, Float64, length(df.Latitude)) .- 0.5)
-df.Longitude1 = df.Longitude .+ 10.0 .* (rand(rng, Float64, length(df.Longitude)) .- 0.5) 
+df.Longitude1 = df.Longitude .+ 10.0 .* (rand(rng, Float64, length(df.Longitude)) .- 0.5)
 KeplerGL.add_arc_layer!(m, df, :Latitude, :Longitude, :Latitude1, :Longitude1,
     opacity = 0.5, color_field = :Magnitude, color_scale = "quantile",
     color_range = ColorBrewer.palette("BuPu",6), thickness = 3)
 ```
 """
-function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Symbol, 
+function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Symbol,
     latitude1::Symbol, longitude1::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_field::Symbol = :null,
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
@@ -74,22 +75,22 @@ function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Sy
         error("Second argument to add_point_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:Latitude0 => Tables.getcolumn(cols, latitude0),
         :Longitude0 => Tables.getcolumn(cols, longitude0),
         :Latitude1 => Tables.getcolumn(cols, latitude1),
         :Longitude1 => Tables.getcolumn(cols, longitude1))
-    if size_field != :null 
+    if size_field != :null
         df_to_use[!,:Size] = Tables.getcolumn(cols, size_field)
     end
-    if color_field != :null 
+    if color_field != :null
         df_to_use[!,:Color] = Tables.getcolumn(cols, color_field)
     end
-    if altitude0 != :null 
+    if altitude0 != :null
         df_to_use[!,:Altitude0] = Tables.getcolumn(cols, altitude0)
     end
-    if altitude1 != :null 
+    if altitude1 != :null
         df_to_use[!,:Altitude1] = Tables.getcolumn(cols, altitude1)
     end
 
@@ -97,8 +98,7 @@ function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Sy
     CSV.write(buf, df_to_use)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -112,7 +112,7 @@ function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Sy
     col = get_rgb_int(color)
     highlight_col = get_rgb_int(highlight_color)
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -185,7 +185,7 @@ function add_arc_layer!(m::KeplerGLMap, table, latitude0::Symbol, longitude0::Sy
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 

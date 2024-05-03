@@ -3,7 +3,7 @@
         color = colorant"#762A83",
         color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
         weight_field::Symbol = :null,
-        weight_scale = "linear",    
+        weight_scale = "linear",
         highlight_color = colorant"#762A83",
         radius = 0.6,
         opacity = 1.0)
@@ -11,7 +11,7 @@
 Adds a heatmap layer to the map `m`, drawing data from `table`.
 # Required Arguments
 - `m::KeplerGLMap`: the map that the layer should be added to
-- `table`: a `Tables.jl`-compatible table that contains the data to draw from 
+- `table`: a `Tables.jl`-compatible table that contains the data to draw from
 - `latitude::Symbol`: name of the column of `table` that contains the latitude of the points to be aggregated into the hexbin
 - `longitude::Symbol`: name of the column of `table` that contains the longitude of the points to be aggregated into the hexbin
 
@@ -35,10 +35,11 @@ KeplerGL.add_heatmap_layer!(m, df, :Latitude, :Longitude, opacity = 0.5, weight_
 """
 function add_heatmap_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::Symbol;
     id::String = randstring(7),
+	dataset_id::String = "data_layer_$(id)",
     color = colorant"#762A83",
     color_range = [colorant"#762A83",colorant"#AF8DC3",colorant"#E7D4E8",colorant"#D9F0D3",colorant"#7FBF7B",colorant"#1B7837"],
     weight_field::Symbol = :null,
-    weight_scale = "linear",    
+    weight_scale = "linear",
     highlight_color = colorant"#762A83",
     radius = 0.6,
     opacity = 1.0)
@@ -47,20 +48,19 @@ function add_heatmap_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::
         error("Second argument to add_hexagon_layer! must follow the Tables.jl interface.")
     end
 
-    # prepare the data to be uploaded 
+    # prepare the data to be uploaded
     cols = Tables.columns(table)
     df_to_use = DataFrame(:Latitude => Tables.getcolumn(cols, latitude),
         :Longitude => Tables.getcolumn(cols, longitude))
-    if weight_field != :null 
+    if weight_field != :null
         df_to_use[!,:Weight] = Tables.getcolumn(cols, weight_field)
     end
-    
+
     buf = IOBuffer()
     CSV.write(buf, df_to_use)
     data_csv = String(take!(buf))
 
-    # data code 
-    dataset_id = "data_layer_$(id)"
+    # data code
     d = CSVData(dataset_id, data_csv)
 
     color_range_formatted = """{
@@ -74,7 +74,7 @@ function add_heatmap_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::
     col = get_rgb_int(color)
     highlight_col = get_rgb_int(highlight_color)
 
-    # config layer code 
+    # config layer code
     config_layer_code = """
     {
         "id": "$(id)",
@@ -146,7 +146,7 @@ function add_heatmap_layer!(m::KeplerGLMap, table, latitude::Symbol, longitude::
     }
     """
 
-    # add to the map 
+    # add to the map
     push!(m.datasets, d)
     push!(m.config[:config][:visState][:layers], JSON3.read(config_layer_code))
 
