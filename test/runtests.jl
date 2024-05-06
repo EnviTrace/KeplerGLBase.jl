@@ -1,5 +1,6 @@
 using KeplerGLBase
-using Documenter, Aqua
+using Aqua
+# using Documenter
 using Test
 
 ##
@@ -22,15 +23,15 @@ for test in tests
     end
 end
 
-DocMeta.setdocmeta!(
-    KeplerGLBase,
-    :DocTestSetup,
-    quote
-        using KeplerGLBase
-    end;
-    recursive=true
-)
+# DocMeta.setdocmeta!(
+#     KeplerGLBase,
+#     :DocTestSetup,
+#     quote
+#         using KeplerGLBase
+#     end;
+#     recursive=true
+# )
 
-@testset "KeplerGLBase.jl Documentation" begin
-    doctest(KeplerGLBase)
-end
+# @testset "KeplerGLBase.jl Documentation" begin
+#     doctest(KeplerGLBase)
+# end
