@@ -184,7 +184,7 @@ end
 """
     make_dispatch_code(m::KeplerGLMap)
 
-This function makes the dispatch code for `m`. It is called by [`render()`](@ref) 
+This function makes the dispatch code for `m`. It is called by render()
 but is sometimes also useful to call directly for debugging purposes
 
 # Required Arguments
